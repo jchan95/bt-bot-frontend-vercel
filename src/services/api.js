@@ -70,3 +70,33 @@ export async function getArticleComparison(issueId) {
   if (!response.ok) throw new Error('Failed to fetch article comparison');
   return response.json();
 }
+
+export async function evalCitationAccuracy(question) {
+  const response = await fetch(`${API_BASE}/eval/citation-accuracy`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question })
+  });
+  if (!response.ok) throw new Error('Citation accuracy eval failed');
+  return response.json();
+}
+
+export async function evalCitationAccuracyBatch() {
+  const response = await fetch(`${API_BASE}/eval/citation-accuracy/batch`, {
+    method: 'POST'
+  });
+  if (!response.ok) throw new Error('Batch citation accuracy eval failed');
+  return response.json();
+}
+
+export async function getCitationAccuracyRuns(limit = 10) {
+  const response = await fetch(`${API_BASE}/eval/citation-accuracy/runs?limit=${limit}`);
+  if (!response.ok) throw new Error('Failed to fetch citation accuracy runs');
+  return response.json();
+}
+
+export async function getCitationAccuracyRunDetails(runId) {
+  const response = await fetch(`${API_BASE}/eval/citation-accuracy/runs/${runId}`);
+  if (!response.ok) throw new Error('Failed to fetch citation accuracy run details');
+  return response.json();
+}

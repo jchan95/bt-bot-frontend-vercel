@@ -1,37 +1,24 @@
 import { useState } from 'react';
 import AskBen from './components/AskBen';
-import BrowseArchive from './components/BrowseArchive';
 import Evaluation from './components/Evaluation';
-import RetrievalInspector from './components/RetrievalInspector';
-import Stats from './components/Stats';
 
-const tabs = ['ask', 'browse', 'retrieval', 'eval', 'stats'];
+const tabs = ['ask', 'eval'];
 const tabLabels = {
   ask: 'Ask Ben',
-  browse: 'Browse Archive',
-  retrieval: 'Retrieval Inspector',
   eval: 'Evaluation',
-  stats: 'Stats',
 };
 
 function App() {
   const [activeTab, setActiveTab] = useState('ask');
 
-  // Persistent state for AskBen
+  // Persistent state for AskBen - separate responses for each mode
   const [askBenState, setAskBenState] = useState({
     question: '',
-    response: null,
+    ragResponse: null,       // Response from RAG mode
+    reasoningResponse: null, // Response from Reasoning mode
     error: null,
     showContext: false,
     mode: 'auto',  // 'auto' or 'reasoning'
-  });
-
-  // Persistent state for BrowseArchive
-  const [browseState, setBrowseState] = useState({
-    searchQuery: '',
-    results: null,
-    error: null,
-    expandedId: null,
   });
 
   // Persistent state for Evaluation
@@ -41,14 +28,6 @@ function App() {
     selectedRun: null,
     runDetails: null,
     activeSection: 'runs',
-  });
-
-  // Persistent state for RetrievalInspector
-  const [retrievalState, setRetrievalState] = useState({
-    query: '',
-    threshold: 0.3,
-    limit: 5,
-    results: null,
   });
 
   return (
@@ -73,12 +52,19 @@ function App() {
           }}>
             BT Bot
           </h1>
-          <p style={{ 
-            margin: '0.25rem 0 0 0', 
-            color: '#666666', 
-            fontSize: '0.95rem' 
+          <p style={{
+            margin: '0.25rem 0 0 0',
+            color: '#666666',
+            fontSize: '0.95rem'
           }}>
-            Exploring 10+ years of Stratechery analysis
+            An experiment to explore the last seven years of Ben Thompson's Stratechery analysis using RAG
+          </p>
+          <p style={{
+            margin: '0.25rem 0 0 0',
+            color: '#888888',
+            fontSize: '0.85rem'
+          }}>
+            By John Chan | <a href="https://www.linkedin.com/in/johnmchan/" target="_blank" rel="noopener noreferrer" style={{ color: '#0066cc', textDecoration: 'none' }}>LinkedIn</a> • <a href="https://github.com/jchan95/bt-bot/" target="_blank" rel="noopener noreferrer" style={{ color: '#0066cc', textDecoration: 'none' }}>Github</a>
           </p>
         </div>
       </header>
@@ -121,7 +107,7 @@ function App() {
       {/* Main Content */}
       <main style={{
         padding: '2rem',
-        maxWidth: activeTab === 'retrieval' ? '1200px' : '900px',
+        maxWidth: '900px',
         margin: '0 auto'
       }}>
         {activeTab === 'ask' && (
@@ -130,25 +116,12 @@ function App() {
             onStateChange={setAskBenState}
           />
         )}
-        {activeTab === 'browse' && (
-          <BrowseArchive
-            persistedState={browseState}
-            onStateChange={setBrowseState}
-          />
-        )}
-        {activeTab === 'retrieval' && (
-          <RetrievalInspector
-            persistedState={retrievalState}
-            onStateChange={setRetrievalState}
-          />
-        )}
         {activeTab === 'eval' && (
           <Evaluation
             persistedState={evalState}
             onStateChange={setEvalState}
           />
         )}
-        {activeTab === 'stats' && <Stats />}
       </main>
 
       {/* Footer */}

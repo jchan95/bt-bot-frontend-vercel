@@ -1,14 +1,20 @@
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { query } from '../services/api';
 
 function AskBen({ persistedState, onStateChange }) {
   // Use persisted state from parent, with local loading state
+  // Separate responses for each mode
   const [question, setQuestion] = useState(persistedState?.question || '');
-  const [response, setResponse] = useState(persistedState?.response || null);
+  const [ragResponse, setRagResponse] = useState(persistedState?.ragResponse || null);
+  const [reasoningResponse, setReasoningResponse] = useState(persistedState?.reasoningResponse || null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(persistedState?.error || null);
   const [showContext, setShowContext] = useState(persistedState?.showContext || false);
   const [mode, setMode] = useState(persistedState?.mode || 'auto'); // 'auto' or 'reasoning'
+
+  // Get the current response based on selected mode
+  const response = mode === 'reasoning' ? reasoningResponse : ragResponse;
 
   // Sync state changes to parent for persistence
   const updateState = (updates) => {
@@ -21,17 +27,22 @@ function AskBen({ persistedState, onStateChange }) {
 
     setLoading(true);
     setError(null);
-    setResponse(null);
     setShowContext(false);
-    updateState({ error: null, response: null, showContext: false });
 
     try {
       const result = await query(question, { mode });
-      setResponse(result);
-      updateState({ question, response: result, error: null, mode });
+
+      // Store response in the appropriate mode-specific state
+      if (mode === 'reasoning') {
+        setReasoningResponse(result);
+        updateState({ question, reasoningResponse: result, error: null, mode });
+      } else {
+        setRagResponse(result);
+        updateState({ question, ragResponse: result, error: null, mode });
+      }
     } catch (err) {
       setError(err.message);
-      updateState({ question, error: err.message, response: null });
+      updateState({ question, error: err.message });
     } finally {
       setLoading(false);
     }
@@ -51,7 +62,8 @@ function AskBen({ persistedState, onStateChange }) {
 
   const handleModeChange = (newMode) => {
     setMode(newMode);
-    updateState({ mode: newMode });
+    setShowContext(false); // Reset context visibility when switching modes
+    updateState({ mode: newMode, showContext: false });
   };
 
   const getTierExplanation = (tier) => {
@@ -186,12 +198,17 @@ function AskBen({ persistedState, onStateChange }) {
               </div>
             </div>
           ) : (
-            <div style={{ display: 'flex', gap: '2rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
-              <div>
-                <span style={{ color: '#0066cc', fontWeight: '600' }}>Tier 1:</span> Distillations — AI-extracted summaries with thesis, key claims, topics
+            <div style={{ marginTop: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+                <span style={{ backgroundColor: '#0066cc', color: 'white', padding: '0.25rem 0.5rem', fontSize: '0.8rem' }}>1</span>
+                <span>Search <strong>Distillations</strong> (AI-extracted thesis, claims, topics)</span>
+                <span style={{ color: '#666' }}>→</span>
+                <span style={{ backgroundColor: '#0066cc', color: 'white', padding: '0.25rem 0.5rem', fontSize: '0.8rem' }}>2</span>
+                <span>If needed, search <strong>Chunks</strong> (full text excerpts)</span>
               </div>
-              <div>
-                <span style={{ color: '#FF5A09', fontWeight: '600' }}>Tier 2:</span> Chunks — Full text excerpts for precision queries
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <span style={{ backgroundColor: '#0066cc', color: 'white', padding: '0.25rem 0.5rem', fontSize: '0.8rem' }}>3</span>
+                <span>LLM generates answer grounded in retrieved context</span>
               </div>
             </div>
           )}
@@ -282,22 +299,75 @@ function AskBen({ persistedState, onStateChange }) {
 
           {/* Answer */}
           <div style={{ padding: '2rem' }}>
-            <h3 style={{ 
-              margin: '0 0 1rem 0', 
+            <h3 style={{
+              margin: '0 0 1rem 0',
               color: '#1a1a1a',
               fontSize: '1.25rem',
               fontWeight: '600',
             }}>
               Response
             </h3>
-            
-            <div style={{
-              lineHeight: '1.8',
-              color: '#1a1a1a',
-              whiteSpace: 'pre-wrap',
-              marginBottom: '2rem'
-            }}>
-              {response.answer}
+
+            <div
+              className="markdown-content"
+              style={{
+                lineHeight: '1.8',
+                color: '#1a1a1a',
+                marginBottom: '2rem'
+              }}
+            >
+              <ReactMarkdown
+                components={{
+                  p: ({ children }) => (
+                    <p style={{ marginBottom: '1rem', lineHeight: '1.8' }}>{children}</p>
+                  ),
+                  h1: ({ children }) => (
+                    <h1 style={{ fontSize: '1.5rem', fontWeight: '600', marginTop: '1.5rem', marginBottom: '0.75rem', color: '#1a1a1a' }}>{children}</h1>
+                  ),
+                  h2: ({ children }) => (
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginTop: '1.5rem', marginBottom: '0.75rem', color: '#1a1a1a' }}>{children}</h2>
+                  ),
+                  h3: ({ children }) => (
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginTop: '1.25rem', marginBottom: '0.5rem', color: '#1a1a1a' }}>{children}</h3>
+                  ),
+                  ul: ({ children }) => (
+                    <ul style={{ marginBottom: '1rem', paddingLeft: '1.5rem' }}>{children}</ul>
+                  ),
+                  ol: ({ children }) => (
+                    <ol style={{ marginBottom: '1rem', paddingLeft: '1.5rem' }}>{children}</ol>
+                  ),
+                  li: ({ children }) => (
+                    <li style={{ marginBottom: '0.5rem', lineHeight: '1.7' }}>{children}</li>
+                  ),
+                  strong: ({ children }) => (
+                    <strong style={{ fontWeight: '600', color: '#1a1a1a' }}>{children}</strong>
+                  ),
+                  em: ({ children }) => (
+                    <em style={{ fontStyle: 'italic' }}>{children}</em>
+                  ),
+                  blockquote: ({ children }) => (
+                    <blockquote style={{
+                      borderLeft: '3px solid #FF5A09',
+                      paddingLeft: '1rem',
+                      margin: '1rem 0',
+                      color: '#555555',
+                      fontStyle: 'italic'
+                    }}>
+                      {children}
+                    </blockquote>
+                  ),
+                  code: ({ inline, children }) => (
+                    inline
+                      ? <code style={{ backgroundColor: '#f3f4f6', padding: '0.15rem 0.3rem', borderRadius: '3px', fontSize: '0.9em', fontFamily: 'monospace' }}>{children}</code>
+                      : <pre style={{ backgroundColor: '#f3f4f6', padding: '1rem', borderRadius: '4px', overflow: 'auto', marginBottom: '1rem' }}><code style={{ fontFamily: 'monospace', fontSize: '0.9em' }}>{children}</code></pre>
+                  ),
+                  a: ({ href, children }) => (
+                    <a href={href} style={{ color: '#0066cc', textDecoration: 'underline' }} target="_blank" rel="noopener noreferrer">{children}</a>
+                  ),
+                }}
+              >
+                {response.answer}
+              </ReactMarkdown>
             </div>
 
             {/* Sources with Context */}
