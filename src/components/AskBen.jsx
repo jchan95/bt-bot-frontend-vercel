@@ -144,7 +144,7 @@ function AskBen({ persistedState, onStateChange }) {
             </div>
             <div style={{ fontSize: '0.85rem', color: '#666666', lineHeight: '1.4' }}>
               Retrieves relevant content first, then generates answer based on retrieved context.
-              Best for: factual questions, specific quotes, historical lookups.
+              <br /><strong>Best for:</strong> factual questions, specific quotes, historical lookups.
             </div>
           </button>
           <button
@@ -169,7 +169,7 @@ function AskBen({ persistedState, onStateChange }) {
             </div>
             <div style={{ fontSize: '0.85rem', color: '#666666', lineHeight: '1.4' }}>
               LLM reasons using Ben's frameworks first, then retrieves supporting citations.
-              Best for: analytical questions, applying frameworks to new topics.
+              <br /><strong>Best for:</strong> analytical questions, applying frameworks to new topics.
             </div>
           </button>
         </div>
