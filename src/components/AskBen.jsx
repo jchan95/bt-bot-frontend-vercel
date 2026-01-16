@@ -113,7 +113,7 @@ function AskBen({ persistedState, onStateChange }) {
           Ask a Question
         </h2>
         <p style={{ color: '#666666', marginBottom: '1.5rem', lineHeight: '1.6' }}>
-          Query 10+ years of Ben Thompson's analysis using two-tier RAG retrieval.
+          Query 7 years of Ben Thompson's Stratechery analysis.
         </p>
 
         {/* Mode Toggle */}
